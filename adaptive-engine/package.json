@@ -10,9 +10,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
     "prettier": "^3.6.2",
     "typescript": "^5.8.3",
     "vitest": "^2.1.9"
