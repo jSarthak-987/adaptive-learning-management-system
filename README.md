@@ -1,7 +1,7 @@
 # Adaptive Learning Management System (LMS) 
-# System Design Documentation
+## System Design Documentation
 
-This repository collects the architecture and design documents for an **adaptive learning management system (LMS)**—a platform that runs computer-adaptive assessments for many learners at once.
+This repository collects the architecture and design documents for an **adaptive learning management system (LMS)** - a platform that runs computer-adaptive assessments for many learners at once.
 
 **What the platform does:** Each test session walks a learner through a loop: sign in, answer a question, update an ability estimate, and receive the next item matched to that estimate. That path is kept separate from **video proctoring** so WebRTC media traffic does not slow down answer submission or item selection.
 
