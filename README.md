@@ -2375,15 +2375,18 @@ To avoid overreacting to single responses, the system applies a configurable dam
 
 Where:
 
-- α = damping factor
+- α = damping factor / learning rate
 - u = actual answer outcome
 - P = predicted probability of correct answer
 - I = item information
 
 For this system:
 
+Example configuration:
+
 ```text
-α = 0.3
+learning_rate, α = 0.3
+max_step_size = 0.75
 ```
 
 So the same update becomes:
@@ -3114,11 +3117,9 @@ paths:
                   expires_at:
                       type: string
                       format: date-time
-                    example: "2026-05-29T11:30:00Z"
                   last_activity_at:
                       type: string
                       format: date-time
-                    example: "2026-05-29T10:25:00Z"
 
   /test-sessions/{session_id}/answers:
     post:
