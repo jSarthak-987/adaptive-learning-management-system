@@ -1,6 +1,6 @@
 # Section-2 — Adaptive Engine Module
 
-Standalone TypeScript implementation of the **Rasch 1PL adaptive algorithm** described in Section 1 (`README.md` → _3. Adaptive Algorithm Design_). This package is pure logic: no database, no HTTP, no session persistence.
+Standalone TypeScript implementation of the **Rasch 1PL adaptive algorithm** described in Section 1 (`README.md` → _3. Adaptive Algorithm Design_). This package is a deterministic domain module containing only adaptive-testing logic. It has no dependency on databases, HTTP frameworks, session storage, or infrastructure concerns.
 
 ## Quick start
 
@@ -82,8 +82,17 @@ After one response, a naive update can jump θ by +2 after a single correct medi
 P = Rasch probability at current θ and item difficulty b
 I = P × (1 − P)                    // how informative this item is
 raw = (u − P) / max(I, 0.05)       // u = 1 correct, 0 incorrect
-step = clamp(0.3 × raw, −0.75, +0.75)
-θ_new = clamp(θ_old + step, −4, +4)
+step = clamp(learningRate × raw, -maxStepSize, +maxStepSize)
+θ_new = clamp(θ_old + step, minAbility, maxAbility)
+```
+
+```text
+Example defaults:
+
+learningRate = 0.3
+maxStepSize = 0.75
+minAbility = -4
+maxAbility = +4
 ```
 
 - **Damping (0.3)** — small steps per question
@@ -110,7 +119,11 @@ Then sort by `|θ − difficulty|`, take the best **N** (`randomizationN`), pick
 2. **Length** — `questions_answered >= maxQuestions` (default 40)
 3. **Pool exhausted** — no eligible questions left
 
-Confidence is checked before max-questions so a precise estimate can end the test early.
+Test termination occurs when the first termination condition is satisfied:
+
+- SE < terminationSeThreshold
+- questionsAnswered >= maxQuestions
+- no eligible questions remain
 
 ### What this package does not do
 
@@ -186,8 +199,8 @@ if (result.termination.shouldTerminate) {
 
 **Boundaries of this package**
 
-- Does **not** assign JWTs, idempotency keys, or row locks (Section 1.5).
-- Does **not** increment `exposure_count` — the caller updates that after delivery.
+- Does **not** assign JWTs, idempotency keys, or row locks (Section 1.5). Replay protection, idempotency validation, and session locking are handled by the **Test Service** and are intentionally outside the scope of this package.
+- Does **not** increment `exposure_count` - the caller updates that after delivery. The adaptive engine only reads exposure metadata supplied by the caller. Ownership of `exposure_count` updates remains with the **Question Service**.
 - Does **not** stream video or touch proctoring.
 
 Those concerns stay in the API gateway, auth service, question service, and proctoring subsystem; this module only implements statistically grounded selection and ability estimation.
@@ -202,3 +215,18 @@ Those concerns stay in the API gateway, auth service, question service, and proc
 | Difficulty 1 & 10   | `boundaries.test.ts`  |
 | Termination         | `termination.test.ts` |
 | No-repeat           | `no-repeat.test.ts`   |
+
+
+## Quality Assurance
+
+Vitest test suite:
+
+- 23 tests
+- 6 test files
+- Statement coverage: 82.6%
+- Branch coverage: 81.8%
+- Line coverage: 82.6%
+
+Coverage report can be generated using:
+
+`npm run test:coverage`
