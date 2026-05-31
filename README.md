@@ -530,9 +530,12 @@ sequenceDiagram
 Typical writes:
 
 ```text
-1 TestSession insert
-1 AuditLog insert
-1 ProctoringSession insert (optional)
+Synchronous:
+- TestSession insert
+- ProctoringSession insert
+
+Asynchronous:
+- Audit event → Kafka
 ```
 
 Typical reads:
@@ -556,13 +559,13 @@ P99 latency < 3 seconds
 At:
 
 ```text
-50,000 learners / 5 minutes
+50,000 learners / 300 seconds
 ```
 
 Average:
 
 ```text
-167 start requests/second
+≈ 167 session starts/second average
 ```
 
 Burst target:
@@ -2447,7 +2450,7 @@ I = P × (1 - P)
 
 raw_update = (u - P) / max(I, 0.05)
 
-step = clamp(0.3 × raw_update, -0.75, +0.75)
+step = clamp(learning_rate × raw_update, -max_step_size, +max_step_size)
 
 θ_new = clamp(θ_old + step, -4, +4)
 ```
@@ -3109,10 +3112,12 @@ paths:
                   current_question:
                     $ref: "#/components/schemas/QuestionForLearner"
                   expires_at:
-                    type: date
+                      type: string
+                      format: date-time
                     example: "2026-05-29T11:30:00Z"
                   last_activity_at:
-                    type: date
+                      type: string
+                      format: date-time
                     example: "2026-05-29T10:25:00Z"
 
   /test-sessions/{session_id}/answers:
@@ -3500,6 +3505,7 @@ If the system reaches the maximum question count or the confidence threshold, no
     "max_questions": 40,
     "remaining_questions": 18
   },
+  "status": "completed",
   "test_status": "completed",
   "completion_reason": "confidence_threshold_reached",
   "next_question": null
